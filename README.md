@@ -3,101 +3,91 @@
 [![Release](https://img.shields.io/github/v/release/aliafacan/zorin-desktop-studio?label=release)](https://github.com/aliafacan/zorin-desktop-studio/releases)
 [![Build and Release](https://img.shields.io/github/actions/workflow/status/aliafacan/zorin-desktop-studio/release.yml?label=release%20workflow)](https://github.com/aliafacan/zorin-desktop-studio/actions/workflows/release.yml)
 
-Zorin OS masaüstü ikonları için GTK tabanlı ayar ve düzenleme aracı.
+GTK desktop utility for Zorin OS to tune icon layout and edit `.desktop` launchers.
 
-Uygulama iki ana bölüm içerir:
+Languages:
 
-- Simge boyutu ve aralıkları için canlı önizlemeli ayar ekranı
-- Masaüstündeki `.desktop` kısayollarını düzenleme ekranı
+- English (this file)
+- Turkish: [README.tr.md](README.tr.md)
 
-Öne çıkanlar:
+The app has two main sections:
 
-- Canlı önizleme ile simge boyutu, yatay aralık ve dikey aralık ayarı
-- `Uygula` ile kalıcı kaydetme, `Sıfırla` ile varsayılan değerlere dönme
-- Uygulama içinden yönetici parolası isteme
-- Türkçe ve İngilizce arayüz
-- Açık ve koyu tema desteği
-- Masaüstündeki `.desktop` dosyalarının ad, dosya adı, simge, komut ve açıklama alanlarını düzenleme
+- Icon Settings with live preview (size, horizontal spacing, vertical spacing)
+- Desktop Launchers editor for existing `.desktop` files on desktop
 
-## Ekran Görüntüsü
+Key features:
 
-![Zorin Desktop Studio Screenshot](docs/screenshot.svg)
+- Live preview while moving sliders
+- `Apply` to persist and `Reset` to return to defaults
+- In-app admin password prompt for privileged operations
+- Turkish and English interface
+- Light and dark theme support
+- Edit display name, file name, icon, exec command and comment in `.desktop` launchers
 
-## İndir
+## Screenshot
 
-- Son sürüm: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
-- Doğrudan `.deb` (v1.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v1.0.0/zorin-icon-settings_1.0.0_all.deb
+![Zorin Desktop Studio Screenshot](docs/screenshot.png)
 
-## Gereksinimler
+## Download
+
+- Latest release: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
+- Direct `.deb` (v1.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v1.0.0/zorin-icon-settings_1.0.0_all.deb
+
+## Requirements
 
 - Python 3.10+
 - `python3-gi`
 - `gir1.2-gtk-3.0`
 - Zorin OS / GNOME Desktop Icons uzantısı
 
-Geliştirme ortamında ek olarak sanal ortama şu paketler kurulabilir:
+Optional for development in virtual environments:
 
 - `PyGObject`
 - `PyGObject-stubs`
 
-## Çalıştırma
+## Run
 
 ```bash
 python3 main.py
 ```
 
-veya
+or
 
 ```bash
 ./zorin-icon-settings.py
 ```
 
-## Debian Paketi Oluşturma
+## Build Debian Package
 
-Proje dizininde:
+From project directory:
 
 ```bash
 chmod +x build_deb.sh
 ./build_deb.sh
 ```
 
-Başarılı olursa çıktı dosyası `dist/` altında oluşur.
+The output package is generated in `dist/`.
 
-Kurulum:
+Install:
 
 ```bash
 sudo dpkg -i dist/zorin-icon-settings_1.0.0_all.deb
 sudo apt-get install -f
 ```
 
-## GitHub İçin Önerilen Adımlar
+## Release Automation
 
-Bu klasörü bağımsız bir depo olarak paylaşmak için:
-
-```bash
-cd icon_settings
-git init
-git add .
-git commit -m "Initial release"
-```
-
-Sonra GitHub üzerinde public bir repo açıp uzak depo ekleyebilirsin:
-
-```bash
-git remote add origin <REPO_URL>
-git branch -M main
-git push -u origin main
-```
-
-Sürüm etiketi ile otomatik release çıkarmak için:
+Tag-based GitHub release workflow is configured:
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-## Gizlilik Notu
+This triggers `.github/workflows/release.yml`, builds `.deb`, and uploads it to GitHub Releases.
 
-Kod içinde kalıcı olarak saklanan bir parola, token veya özel anahtar bulunmuyor.
+## Privacy Note
 
-Yönetici parolası yalnızca uygulama açıkken bellekte tutulur ve dosyaya yazılmaz.
+No hard-coded private key, token, or API secret is stored in the source.
+
+Admin password is kept only in memory during app runtime and is not written to disk.
