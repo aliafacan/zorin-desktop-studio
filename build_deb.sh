@@ -3,7 +3,7 @@
 set -e
 
 NAME="zorin-icon-settings"
-VERSION="1.0.0"
+VERSION="2.0.0"
 ARCH="all"
 PKG="${NAME}_${VERSION}_${ARCH}"
 
@@ -40,6 +40,7 @@ install -d "${PKGDIR}/usr/share/icons/hicolor/64x64/apps"
 install -d "${PKGDIR}/usr/share/icons/hicolor/128x128/apps"
 
 install -m 644 "${ROOT_DIR}/backend.py" "${PKGDIR}/usr/lib/${NAME}/backend.py"
+install -m 644 "${ROOT_DIR}/autostart.py" "${PKGDIR}/usr/lib/${NAME}/autostart.py"
 install -m 644 "${ROOT_DIR}/constants.py" "${PKGDIR}/usr/lib/${NAME}/constants.py"
 install -m 644 "${ROOT_DIR}/desktop_entries.py" "${PKGDIR}/usr/lib/${NAME}/desktop_entries.py"
 install -m 644 "${ROOT_DIR}/i18n.py" "${PKGDIR}/usr/lib/${NAME}/i18n.py"
@@ -86,9 +87,9 @@ Priority: optional
 Architecture: ${ARCH}
 Depends: python3 (>= 3.10), python3-gi, gir1.2-gtk-3.0
 Maintainer: Ali <ali@example.com>
-Description: Desktop icon settings and launcher editor for Zorin OS
- GTK-based utility for live desktop icon tuning and .desktop launcher editing.
- Includes Turkish/English UI and light/dark theme support.
+Description: Desktop tools suite for Zorin OS
+ GTK-based utility for icon tuning, desktop launcher editing, and
+ desktop layout save/restore workflows on Zorin OS.
 EOF
 
 cat > "${PKGDIR}/DEBIAN/postinst" << 'EOF'

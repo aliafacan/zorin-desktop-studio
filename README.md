@@ -10,10 +10,11 @@ Languages:
 - English (this file)
 - Turkish: [README.tr.md](README.tr.md)
 
-The app has two main sections:
+The app has three main sections:
 
 - Icon Settings with live preview (size, horizontal spacing, vertical spacing)
 - Desktop Launchers editor for existing `.desktop` files on desktop
+- Desktop Layouts page to save and restore icon placement snapshots
 
 Key features:
 
@@ -23,6 +24,7 @@ Key features:
 - Turkish and English interface
 - Light and dark theme support
 - Edit display name, file name, icon, exec command and comment in `.desktop` launchers
+- Save, restore, rename and delete desktop layout presets
 
 ## Screenshot
 
@@ -31,7 +33,7 @@ Key features:
 ## Download
 
 - Latest release: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
-- Direct `.deb` (v1.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v1.0.0/zorin-icon-settings_1.0.0_all.deb
+- Direct `.deb` (v2.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.0/zorin-icon-settings_2.0.0_all.deb
 
 ## Requirements
 
@@ -71,7 +73,7 @@ The output package is generated in `dist/`.
 Install:
 
 ```bash
-sudo dpkg -i dist/zorin-icon-settings_1.0.0_all.deb
+sudo dpkg -i dist/zorin-icon-settings_2.0.0_all.deb
 sudo apt-get install -f
 ```
 
@@ -80,8 +82,8 @@ sudo apt-get install -f
 Tag-based GitHub release workflow is configured:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v2.0.0
+git push origin v2.0.0
 ```
 
 This triggers `.github/workflows/release.yml`, builds `.deb`, and uploads it to GitHub Releases.

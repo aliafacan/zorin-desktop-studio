@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime
 import os
 import gi
 
@@ -12,9 +13,12 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, GLib, Gtk  # pyright: ignore[reportMissingModuleSource]
 
 from backend import AuthRequiredError, BackendError, IconSettingsBackend, SessionState
+from autostart import AutostartManager
 from constants import APP_ICON_NAME, CUSTOM_SETTING, PREVIEW_DEBOUNCE_MS, IconValues
+from desktop_layouts import DesktopLayoutService, LayoutError
 from desktop_entries import DesktopEntryInfo, DesktopEntryStore
 from i18n import t, translate_backend_message
+from layout_store import LayoutRecord, LayoutStore
 from preferences import PreferencesStore
 from theme import get_theme_css
 
@@ -26,6 +30,9 @@ class IconSettingsWindow(Gtk.Window):
         super().__init__(title=t(self.preferences.language, "app_title"))
         self.backend = backend
         self.desktop_store = DesktopEntryStore()
+        self.layout_service = DesktopLayoutService()
+        self.layout_store = LayoutStore()
+        self.autostart = AutostartManager()
         self.revert_state = self.backend.load_state()
         self.last_preview_state = self.revert_state
         self.preview_source_id = None
@@ -34,6 +41,8 @@ class IconSettingsWindow(Gtk.Window):
         self.is_refreshing_selectors = False
         self.css_provider = Gtk.CssProvider()
         self.selected_desktop_path: str | None = None
+        self.selected_layout_key: str | None = None
+        self.desktop_item_count = 0
 
         self.set_default_size(760, 620)
         self.set_icon_name(APP_ICON_NAME)
@@ -113,44 +122,41 @@ class IconSettingsWindow(Gtk.Window):
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
         self.add(vbox)
 
-        self.menu_bar = Gtk.MenuBar()
-        vbox.pack_start(self.menu_bar, False, False, 0)
-
-        self.sections_menu_item = Gtk.MenuItem()
-        self.sections_menu = Gtk.Menu()
-        self.sections_menu_item.set_submenu(self.sections_menu)
-        self.menu_bar.append(self.sections_menu_item)
-
-        self.icon_settings_menu_item = Gtk.MenuItem()
-        self.icon_settings_menu_item.connect("activate", self.on_open_page, 0)
-        self.sections_menu.append(self.icon_settings_menu_item)
-
-        self.desktop_entries_menu_item = Gtk.MenuItem()
-        self.desktop_entries_menu_item.connect("activate", self.on_open_page, 1)
-        self.sections_menu.append(self.desktop_entries_menu_item)
-
-        self.actions_menu_item = Gtk.MenuItem()
-        self.actions_menu = Gtk.Menu()
-        self.actions_menu_item.set_submenu(self.actions_menu)
-        self.menu_bar.append(self.actions_menu_item)
-
-        self.refresh_entries_menu_item = Gtk.MenuItem()
-        self.refresh_entries_menu_item.connect("activate", self.on_reload_desktop_entries)
-        self.actions_menu.append(self.refresh_entries_menu_item)
+        content_overlay = Gtk.Overlay()
+        vbox.pack_start(content_overlay, True, True, 0)
 
         self.pages = Gtk.Notebook()
-        self.pages.set_show_tabs(False)
+        self.pages.set_show_tabs(True)
         self.pages.set_show_border(False)
-        vbox.pack_start(self.pages, True, True, 0)
+        self.pages.set_scrollable(True)
+        self.pages.set_tab_pos(Gtk.PositionType.TOP)
+        content_overlay.add(self.pages)
 
         settings_page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
-        self.pages.append_page(settings_page, Gtk.Label())
+        self.settings_tab_label = Gtk.Label()
+        self.pages.append_page(settings_page, self.settings_tab_label)
 
         desktop_page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
-        self.pages.append_page(desktop_page, Gtk.Label())
+        self.desktop_tab_label = Gtk.Label()
+        self.pages.append_page(desktop_page, self.desktop_tab_label)
+
+        layouts_page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=15)
+        self.layouts_tab_label = Gtk.Label()
+        self.pages.append_page(layouts_page, self.layouts_tab_label)
 
         self._build_settings_page(settings_page)
         self._build_desktop_entries_page(desktop_page)
+        self._build_layouts_page(layouts_page)
+        self.pages.set_current_page(0)
+
+        self.settings_btn = Gtk.Button()
+        self.settings_btn.get_style_context().add_class("header-action")
+        self.settings_btn.connect("clicked", self.on_open_settings)
+        self.settings_btn.set_halign(Gtk.Align.END)
+        self.settings_btn.set_valign(Gtk.Align.START)
+        self.settings_btn.set_margin_top(4)
+        self.settings_btn.set_margin_end(6)
+        content_overlay.add_overlay(self.settings_btn)
 
     def _build_settings_page(self, container: Gtk.Box) -> None:
         vbox = container
@@ -164,22 +170,11 @@ class IconSettingsWindow(Gtk.Window):
         self.subtitle_label.get_style_context().add_class("dim-label")
         vbox.pack_start(self.subtitle_label, False, False, 0)
 
-        controls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        controls_box.set_halign(Gtk.Align.CENTER)
-
-        self.theme_caption = Gtk.Label()
-        self.theme_combo = Gtk.ComboBoxText()
-        self.theme_combo.connect("changed", self.on_theme_changed)
-        controls_box.pack_start(self.theme_caption, False, False, 0)
-        controls_box.pack_start(self.theme_combo, False, False, 0)
-
-        self.language_caption = Gtk.Label()
-        self.language_combo = Gtk.ComboBoxText()
-        self.language_combo.connect("changed", self.on_language_changed)
-        controls_box.pack_start(self.language_caption, False, False, 0)
-        controls_box.pack_start(self.language_combo, False, False, 0)
-
-        vbox.pack_start(controls_box, False, False, 0)
+        self.settings_hint_label = Gtk.Label()
+        self.settings_hint_label.set_line_wrap(True)
+        self.settings_hint_label.set_justify(Gtk.Justification.CENTER)
+        self.settings_hint_label.get_style_context().add_class("dim-label")
+        vbox.pack_start(self.settings_hint_label, False, False, 0)
 
         vbox.pack_start(Gtk.Separator(), False, False, 0)
 
@@ -240,10 +235,12 @@ class IconSettingsWindow(Gtk.Window):
         container.pack_start(self.desktop_subtitle_label, False, False, 0)
 
         content = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
+        content.set_position(360)
         container.pack_start(content, True, True, 0)
 
         left_frame = Gtk.Frame()
-        content.add1(left_frame)
+        left_frame.set_size_request(320, -1)
+        content.pack1(left_frame, resize=True, shrink=False)
 
         left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         left_box.set_border_width(10)
@@ -259,7 +256,9 @@ class IconSettingsWindow(Gtk.Window):
         self.desktop_tree.get_selection().connect("changed", self.on_desktop_entry_selected)
 
         icon_renderer = Gtk.CellRendererPixbuf()
+        icon_renderer.set_property("ypad", 4)
         text_renderer = Gtk.CellRendererText()
+        text_renderer.set_property("ypad", 5)
         column = Gtk.TreeViewColumn()
         column.pack_start(icon_renderer, False)
         column.add_attribute(icon_renderer, "icon-name", 1)
@@ -277,7 +276,7 @@ class IconSettingsWindow(Gtk.Window):
         left_box.pack_start(self.reload_desktop_btn, False, False, 0)
 
         right_frame = Gtk.Frame()
-        content.add2(right_frame)
+        content.pack2(right_frame, resize=True, shrink=False)
 
         right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         right_box.set_border_width(10)
@@ -349,6 +348,105 @@ class IconSettingsWindow(Gtk.Window):
         self.desktop_status.set_line_wrap(True)
         right_box.pack_start(self.desktop_status, False, False, 0)
 
+    def _build_layouts_page(self, container: Gtk.Box) -> None:
+        self.layouts_title_label = Gtk.Label()
+        self.layouts_title_label.set_xalign(0)
+        container.pack_start(self.layouts_title_label, False, False, 0)
+
+        self.layouts_subtitle_label = Gtk.Label()
+        self.layouts_subtitle_label.set_xalign(0)
+        self.layouts_subtitle_label.set_line_wrap(True)
+        self.layouts_subtitle_label.get_style_context().add_class("dim-label")
+        container.pack_start(self.layouts_subtitle_label, False, False, 0)
+
+        self.layouts_list_title = Gtk.Label()
+        self.layouts_list_title.set_xalign(0)
+        container.pack_start(self.layouts_list_title, False, False, 0)
+
+        self.layouts_store = Gtk.ListStore(str, str, str, int, str)
+        self.layouts_tree = Gtk.TreeView(model=self.layouts_store)
+        self.layouts_tree.get_selection().connect("changed", self.on_layout_selected)
+
+        columns = [
+            (t(self.preferences.language, "layouts_name"), 1, 260, True),
+            (t(self.preferences.language, "layouts_saved_at"), 2, 190, False),
+            (t(self.preferences.language, "layouts_items"), 3, 100, False),
+            (t(self.preferences.language, "layouts_status"), 4, 140, False),
+        ]
+        for title, model_index, width, expands in columns:
+            renderer = Gtk.CellRendererText()
+            column = Gtk.TreeViewColumn(title, renderer, text=model_index)
+            column.set_resizable(True)
+            column.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+            column.set_fixed_width(width)
+            column.set_expand(expands)
+            self.layouts_tree.append_column(column)
+
+        layouts_scroller = Gtk.ScrolledWindow()
+        layouts_scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        layouts_scroller.add(self.layouts_tree)
+        container.pack_start(layouts_scroller, True, True, 0)
+
+        self.layouts_meta_label = Gtk.Label()
+        self.layouts_meta_label.set_xalign(0)
+        self.layouts_meta_label.set_line_wrap(True)
+        self.layouts_meta_label.get_style_context().add_class("dim-label")
+        container.pack_start(self.layouts_meta_label, False, False, 0)
+
+        button_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        button_row.get_style_context().add_class("action-bar")
+        container.pack_start(button_row, False, False, 0)
+
+        self.layouts_save_btn = Gtk.Button()
+        self.layouts_save_btn.get_style_context().add_class("success-action")
+        self.layouts_save_btn.connect("clicked", self.on_save_layout)
+        button_row.pack_start(self.layouts_save_btn, False, False, 0)
+
+        self.layouts_restore_btn = Gtk.Button()
+        self.layouts_restore_btn.get_style_context().add_class("outline-accent")
+        self.layouts_restore_btn.connect("clicked", self.on_restore_layout)
+        button_row.pack_start(self.layouts_restore_btn, False, False, 0)
+
+        self.layouts_autoload_btn = Gtk.Button()
+        self.layouts_autoload_btn.connect("clicked", self.on_toggle_autoload_layout)
+        button_row.pack_start(self.layouts_autoload_btn, False, False, 0)
+
+        self.layouts_rename_btn = Gtk.Button()
+        self.layouts_rename_btn.connect("clicked", self.on_rename_layout)
+        button_row.pack_start(self.layouts_rename_btn, False, False, 0)
+
+        self.layouts_delete_btn = Gtk.Button()
+        self.layouts_delete_btn.get_style_context().add_class("outline-danger")
+        self.layouts_delete_btn.connect("clicked", self.on_delete_layout)
+        button_row.pack_start(self.layouts_delete_btn, False, False, 0)
+
+        self.layouts_reload_btn = Gtk.Button()
+        self.layouts_reload_btn.connect("clicked", self.on_reload_layouts)
+        button_row.pack_end(self.layouts_reload_btn, False, False, 0)
+
+        footer_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        container.pack_start(footer_row, False, False, 0)
+
+        self.layouts_count_label = Gtk.Label()
+        self.layouts_count_label.set_xalign(0)
+        self.layouts_count_label.get_style_context().add_class("dim-label")
+        footer_row.pack_start(self.layouts_count_label, False, False, 0)
+
+        self.layouts_startup_label = Gtk.Label()
+        self.layouts_startup_label.set_xalign(0)
+        self.layouts_startup_label.get_style_context().add_class("dim-label")
+        footer_row.pack_start(self.layouts_startup_label, False, False, 18)
+
+        self.layouts_desktop_count_label = Gtk.Label()
+        self.layouts_desktop_count_label.set_xalign(1)
+        self.layouts_desktop_count_label.get_style_context().add_class("dim-label")
+        footer_row.pack_end(self.layouts_desktop_count_label, False, False, 0)
+
+        self.layouts_status = Gtk.Label()
+        self.layouts_status.set_xalign(0)
+        self.layouts_status.set_line_wrap(True)
+        container.pack_start(self.layouts_status, False, False, 0)
+
     def _build_slider_section(
         self,
         parent: Gtk.Box,
@@ -394,21 +492,6 @@ class IconSettingsWindow(Gtk.Window):
         slider._title_label = title_label
         return slider, value_label
 
-    def _populate_selector_options(self) -> None:
-        self.is_refreshing_selectors = True
-
-        self.theme_combo.remove_all()
-        self.theme_combo.append("dark", t(self.preferences.language, "theme_dark"))
-        self.theme_combo.append("light", t(self.preferences.language, "theme_light"))
-        self.theme_combo.set_active_id(self.preferences.theme)
-
-        self.language_combo.remove_all()
-        self.language_combo.append("tr", t(self.preferences.language, "language_tr"))
-        self.language_combo.append("en", t(self.preferences.language, "language_en"))
-        self.language_combo.set_active_id(self.preferences.language)
-
-        self.is_refreshing_selectors = False
-
     def _apply_theme(self) -> None:
         self.css_provider.load_from_data(get_theme_css(self.preferences.theme).encode("utf-8"))
         screen = Gdk.Screen.get_default()
@@ -426,21 +509,22 @@ class IconSettingsWindow(Gtk.Window):
         safe_message = GLib.markup_escape_text(message)
         self.desktop_status.set_markup(f'<span foreground="{color}">{safe_message}</span>')
 
+    def _set_layout_status(self, message: str, color: str) -> None:
+        safe_message = GLib.markup_escape_text(message)
+        self.layouts_status.set_markup(f'<span foreground="{color}">{safe_message}</span>')
+
     def _refresh_texts(self) -> None:
         language = self.preferences.language
-        self.sections_menu_item.set_label(t(language, "menu_sections"))
-        self.actions_menu_item.set_label(t(language, "menu_actions"))
-        self.icon_settings_menu_item.set_label(t(language, "menu_page_icon_settings"))
-        self.desktop_entries_menu_item.set_label(t(language, "menu_page_desktop_entries"))
-        self.refresh_entries_menu_item.set_label(t(language, "menu_refresh_entries"))
+        self.settings_btn.set_label(t(language, "settings"))
+        self.settings_tab_label.set_text(t(language, "tab_icon_settings"))
+        self.desktop_tab_label.set_text(t(language, "tab_desktop_entries"))
+        self.layouts_tab_label.set_text(t(language, "tab_layouts"))
         self.set_title(t(language, "app_title"))
         self.title_label.set_markup(f'<span size="large" weight="bold">{t(language, "app_title")}</span>')
         self.subtitle_label.set_text(t(language, "subtitle"))
-        self.theme_caption.set_text(f"{t(language, 'theme')}: ")
-        self.language_caption.set_text(f"{t(language, 'language')}: ")
+        self.settings_hint_label.set_text(t(language, "settings_page_hint"))
         self.reset_btn.set_label(f" {t(language, 'reset')} ")
         self.apply_btn.set_label(f" {t(language, 'apply')} ")
-        self._populate_selector_options()
         self._refresh_slider_titles()
         self.desktop_title_label.set_markup(f'<span size="large" weight="bold">{t(language, "desktop_entries_title")}</span>')
         self.desktop_subtitle_label.set_text(t(language, "desktop_entries_subtitle"))
@@ -456,9 +540,35 @@ class IconSettingsWindow(Gtk.Window):
         self.desktop_clear_icon_btn.set_label(t(language, "desktop_icon_clear"))
         self.desktop_save_btn.set_label(t(language, "desktop_save"))
         self.reload_desktop_btn.set_label(t(language, "desktop_reload"))
+        self.layouts_title_label.set_markup(f'<span size="large" weight="bold">{t(language, "layouts_title")}</span>')
+        self.layouts_subtitle_label.set_text(t(language, "layouts_subtitle"))
+        self.layouts_list_title.set_markup(f"<b>{t(language, 'layouts_list')}</b>")
+        if self.selected_layout_key:
+            record = self.layout_store.get_layout(self.selected_layout_key)
+            if record is not None:
+                self.layouts_meta_label.set_text(
+                    t(language, "layouts_selection_summary").format(
+                        name=record.name,
+                        saved_at=record.saved_at,
+                        count=record.item_count,
+                    )
+                )
+        else:
+            self.layouts_meta_label.set_text(f"{t(language, 'layouts_path')}: {self.layout_store.save_path}")
+        self.layouts_save_btn.set_label(t(language, "layouts_save"))
+        self.layouts_restore_btn.set_label(t(language, "layouts_restore"))
+        self.layouts_autoload_btn.set_label(self._autoload_button_label())
+        self.layouts_rename_btn.set_label(t(language, "layouts_rename"))
+        self.layouts_delete_btn.set_label(t(language, "layouts_delete"))
+        self.layouts_reload_btn.set_label(t(language, "menu_refresh_layouts"))
+        self.layouts_desktop_count_label.set_text(t(language, "layouts_desktop_summary").format(count=self.desktop_item_count))
+        self.layouts_startup_label.set_text(self._startup_summary_text())
         if not self.selected_desktop_path:
             self._set_desktop_status(t(language, "desktop_select_hint"), "#666666")
+        if not self.selected_layout_key:
+            self._set_layout_status(t(language, "layouts_hint"), "#666666")
         self.reload_desktop_entries(preserve_selection=True)
+        self.reload_layouts(preserve_selection=True)
 
     def _refresh_slider_titles(self) -> None:
         for slider in (self.size_slider, self.width_slider, self.height_slider):
@@ -485,6 +595,33 @@ class IconSettingsWindow(Gtk.Window):
         ):
             widget.set_sensitive(enabled)
 
+    def _set_layout_form_enabled(self, enabled: bool) -> None:
+        for widget in (
+            self.layouts_restore_btn,
+            self.layouts_autoload_btn,
+            self.layouts_rename_btn,
+            self.layouts_delete_btn,
+        ):
+            widget.set_sensitive(enabled)
+
+    def _default_layout_name(self) -> str:
+        stamp = datetime.now().strftime("%d.%m %H:%M")
+        return t(self.preferences.language, "layouts_save_dialog_default").format(stamp=stamp)
+
+    def _startup_summary_text(self) -> str:
+        key = self.preferences.startup_layout_key
+        if not key:
+            return t(self.preferences.language, "layouts_startup_summary_none")
+        record = self.layout_store.get_layout(key)
+        if record is None:
+            return t(self.preferences.language, "layouts_startup_summary_none")
+        return t(self.preferences.language, "layouts_startup_summary").format(name=record.name)
+
+    def _autoload_button_label(self) -> str:
+        if self.selected_layout_key and self.preferences.startup_layout_key == self.selected_layout_key:
+            return t(self.preferences.language, "layouts_autoload_disable")
+        return t(self.preferences.language, "layouts_autoload")
+
     def _fill_desktop_form(self, entry: DesktopEntryInfo) -> None:
         self.selected_desktop_path = entry.path
         self.desktop_display_name_entry.set_text(entry.display_name)
@@ -505,6 +642,24 @@ class IconSettingsWindow(Gtk.Window):
         self._update_icon_preview("")
         self._set_desktop_form_enabled(False)
 
+    def _fill_layout_details(self, record: LayoutRecord) -> None:
+        self.selected_layout_key = record.key
+        self.layouts_meta_label.set_text(
+            t(self.preferences.language, "layouts_selection_summary").format(
+                name=record.name,
+                saved_at=record.saved_at,
+                count=record.item_count,
+            )
+        )
+        self.layouts_autoload_btn.set_label(self._autoload_button_label())
+        self._set_layout_form_enabled(True)
+
+    def _clear_layout_details(self) -> None:
+        self.selected_layout_key = None
+        self.layouts_meta_label.set_text(f"{t(self.preferences.language, 'layouts_path')}: {self.layout_store.save_path}")
+        self.layouts_autoload_btn.set_label(self._autoload_button_label())
+        self._set_layout_form_enabled(False)
+
     def _update_icon_preview(self, icon_value: str) -> None:
         icon_value = icon_value.strip()
         if icon_value and os.path.exists(icon_value):
@@ -519,6 +674,10 @@ class IconSettingsWindow(Gtk.Window):
         selected_path = self.selected_desktop_path if preserve_selection else None
         self.desktop_list_store.clear()
         entries = self.desktop_store.list_entries()
+        self.desktop_item_count = len(entries)
+        self.layouts_desktop_count_label.set_text(
+            t(self.preferences.language, "layouts_desktop_summary").format(count=self.desktop_item_count)
+        )
 
         if not entries:
             self._clear_desktop_form()
@@ -541,6 +700,41 @@ class IconSettingsWindow(Gtk.Window):
         elif first_path is not None:
             selection.select_path(Gtk.TreePath.new_from_indices([0]))
         self._set_desktop_status(t(self.preferences.language, "desktop_select_hint"), "#666666")
+
+    def reload_layouts(self, preserve_selection: bool = False) -> None:
+        selected_key = self.selected_layout_key if preserve_selection else None
+        self.layouts_store.clear()
+        records = self.layout_store.load_all()
+
+        for column, key in enumerate(("layouts_name", "layouts_saved_at", "layouts_items", "layouts_status"), start=0):
+            tree_column = self.layouts_tree.get_column(column)
+            if tree_column is not None:
+                tree_column.set_title(t(self.preferences.language, key))
+
+        if not records:
+            self._clear_layout_details()
+            self.layouts_count_label.set_text(t(self.preferences.language, "layouts_count_summary").format(count=0))
+            self.layouts_startup_label.set_text(self._startup_summary_text())
+            self._set_layout_status(t(self.preferences.language, "layouts_empty"), "#cc7a00")
+            return
+
+        target_iter = None
+        for record in records:
+            tree_iter = self.layouts_store.append(
+                [record.key, record.name, record.saved_at, record.item_count, t(self.preferences.language, "layouts_ready")]
+            )
+            if selected_key and record.key == selected_key:
+                target_iter = tree_iter
+
+        self.layouts_count_label.set_text(t(self.preferences.language, "layouts_count_summary").format(count=len(records)))
+        self.layouts_startup_label.set_text(self._startup_summary_text())
+
+        selection = self.layouts_tree.get_selection()
+        if target_iter is not None:
+            selection.select_iter(target_iter)
+        else:
+            selection.select_path(Gtk.TreePath.new_from_indices([0]))
+        self._set_layout_status(t(self.preferences.language, "layouts_hint"), "#666666")
 
     def _slider_for_key(self, title_key: str) -> Gtk.Scale:
         slider_map = {
@@ -654,11 +848,14 @@ class IconSettingsWindow(Gtk.Window):
     def on_adjust_slider(self, _button: Gtk.Button, title_key: str, delta: int) -> None:
         self._step_slider(self._slider_for_key(title_key), delta)
 
-    def on_open_page(self, _item: Gtk.MenuItem, page_index: int) -> None:
+    def on_open_page(self, _item: Gtk.Widget, page_index: int) -> None:
         self.pages.set_current_page(page_index)
 
     def on_reload_desktop_entries(self, *_args) -> None:
         self.reload_desktop_entries(preserve_selection=True)
+
+    def on_reload_layouts(self, *_args) -> None:
+        self.reload_layouts(preserve_selection=True)
 
     def on_desktop_entry_selected(self, selection: Gtk.TreeSelection) -> None:
         model, tree_iter = selection.get_selected()
@@ -674,6 +871,21 @@ class IconSettingsWindow(Gtk.Window):
 
     def on_icon_entry_changed(self, entry: Gtk.Entry) -> None:
         self._update_icon_preview(entry.get_text())
+
+    def on_layout_selected(self, selection: Gtk.TreeSelection) -> None:
+        model, tree_iter = selection.get_selected()
+        if tree_iter is None:
+            self._clear_layout_details()
+            self._set_layout_status(t(self.preferences.language, "layouts_hint"), "#666666")
+            return
+
+        key = model.get_value(tree_iter, 0)
+        record = self.layout_store.get_layout(key)
+        if record is None:
+            self._clear_layout_details()
+            return
+        self._fill_layout_details(record)
+        self._set_layout_status(t(self.preferences.language, "layouts_hint"), "#666666")
 
     def on_choose_icon(self, _button: Gtk.Button) -> None:
         dialog = Gtk.FileChooserDialog(
@@ -718,25 +930,220 @@ class IconSettingsWindow(Gtk.Window):
         self.reload_desktop_entries(preserve_selection=True)
         self._set_desktop_status(t(self.preferences.language, "desktop_saved"), "#1f7a1f")
 
-    def on_theme_changed(self, combo: Gtk.ComboBoxText) -> None:
-        if self.is_refreshing_selectors:
+    def on_save_layout(self, _button: Gtk.Button) -> None:
+        dialog = Gtk.Dialog(
+            title=t(self.preferences.language, "layouts_save_dialog_title"),
+            transient_for=self,
+            flags=Gtk.DialogFlags.MODAL,
+        )
+        dialog.add_button(t(self.preferences.language, "password_cancel"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(t(self.preferences.language, "password_continue"), Gtk.ResponseType.OK)
+        content = dialog.get_content_area()
+        content.set_spacing(10)
+        content.set_margin_top(12)
+        content.set_margin_bottom(12)
+        content.set_margin_start(12)
+        content.set_margin_end(12)
+        label = Gtk.Label(label=t(self.preferences.language, "layouts_save_dialog_label"))
+        label.set_xalign(0)
+        content.pack_start(label, False, False, 0)
+        entry = Gtk.Entry()
+        entry.set_text(self._default_layout_name())
+        entry.set_activates_default(True)
+        content.pack_start(entry, False, False, 0)
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        dialog.show_all()
+        response = dialog.run()
+        name = entry.get_text().strip()
+        dialog.destroy()
+        if response != Gtk.ResponseType.OK or not name:
             return
-        theme = combo.get_active_id()
-        if theme not in {"dark", "light"}:
-            return
-        self.preferences.theme = theme
-        self._apply_theme()
-        self._save_preferences()
 
-    def on_language_changed(self, combo: Gtk.ComboBoxText) -> None:
-        if self.is_refreshing_selectors:
+        try:
+            snapshot = self.layout_service.capture_current_layout()
+            record = self.layout_store.save_layout(name, snapshot.layout)
+        except LayoutError as exc:
+            message = t(self.preferences.language, "layouts_no_coords") if str(exc) == "NO_COORD" else str(exc)
+            self._set_layout_status(message, "red")
             return
-        language = combo.get_active_id()
-        if language not in {"tr", "en"}:
+
+        self.selected_layout_key = record.key
+        self.reload_layouts(preserve_selection=True)
+        self._set_layout_status(t(self.preferences.language, "layouts_saved"), "#1f7a1f")
+
+    def on_toggle_autoload_layout(self, _button: Gtk.Button) -> None:
+        record = self.layout_store.get_layout(self.selected_layout_key or "")
+        if record is None:
+            self._set_layout_status(t(self.preferences.language, "layouts_no_selection"), "#cc7a00")
             return
-        self.preferences.language = language
-        self._refresh_texts()
+
+        if self.preferences.startup_layout_key == record.key:
+            self.preferences.startup_layout_key = None
+            self.autostart.disable()
+            self._save_preferences()
+            self.layouts_autoload_btn.set_label(self._autoload_button_label())
+            self.layouts_startup_label.set_text(self._startup_summary_text())
+            self._set_layout_status(t(self.preferences.language, "layouts_autoload_disabled"), "#cc7a00")
+            return
+
+        self.preferences.startup_layout_key = record.key
+        self.autostart.enable()
         self._save_preferences()
+        self.layouts_autoload_btn.set_label(self._autoload_button_label())
+        self.layouts_startup_label.set_text(self._startup_summary_text())
+        self._set_layout_status(t(self.preferences.language, "layouts_autoload_enabled"), "#1f7a1f")
+
+    def on_restore_layout(self, _button: Gtk.Button) -> None:
+        record = self.layout_store.get_layout(self.selected_layout_key or "")
+        if record is None:
+            self._set_layout_status(t(self.preferences.language, "layouts_no_selection"), "#cc7a00")
+            return
+
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.OK_CANCEL,
+            text=t(self.preferences.language, "layouts_restore_title"),
+        )
+        dialog.format_secondary_text(t(self.preferences.language, "layouts_restore_message").format(name=record.name))
+        response = dialog.run()
+        dialog.destroy()
+        if response != Gtk.ResponseType.OK:
+            return
+
+        try:
+            self.layout_service.restore_layout(record.layout)
+        except LayoutError as exc:
+            self._set_layout_status(str(exc), "red")
+            return
+
+        self._set_layout_status(t(self.preferences.language, "layouts_restored"), "#1f7a1f")
+
+    def on_rename_layout(self, _button: Gtk.Button) -> None:
+        record = self.layout_store.get_layout(self.selected_layout_key or "")
+        if record is None:
+            self._set_layout_status(t(self.preferences.language, "layouts_no_selection"), "#cc7a00")
+            return
+
+        dialog = Gtk.Dialog(
+            title=t(self.preferences.language, "layouts_rename_dialog_title"),
+            transient_for=self,
+            flags=Gtk.DialogFlags.MODAL,
+        )
+        dialog.add_button(t(self.preferences.language, "password_cancel"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(t(self.preferences.language, "password_continue"), Gtk.ResponseType.OK)
+        content = dialog.get_content_area()
+        content.set_spacing(10)
+        content.set_margin_top(12)
+        content.set_margin_bottom(12)
+        content.set_margin_start(12)
+        content.set_margin_end(12)
+        label = Gtk.Label(label=t(self.preferences.language, "layouts_rename_dialog_label"))
+        label.set_xalign(0)
+        content.pack_start(label, False, False, 0)
+        entry = Gtk.Entry()
+        entry.set_text(record.name)
+        entry.set_activates_default(True)
+        content.pack_start(entry, False, False, 0)
+        dialog.set_default_response(Gtk.ResponseType.OK)
+        dialog.show_all()
+        response = dialog.run()
+        new_name = entry.get_text().strip()
+        dialog.destroy()
+        if response != Gtk.ResponseType.OK or not new_name:
+            return
+
+        self.layout_store.rename_layout(record.key, new_name)
+        self.selected_layout_key = record.key
+        self.reload_layouts(preserve_selection=True)
+        self._set_layout_status(t(self.preferences.language, "layouts_renamed"), "#1f7a1f")
+
+    def on_delete_layout(self, _button: Gtk.Button) -> None:
+        record = self.layout_store.get_layout(self.selected_layout_key or "")
+        if record is None:
+            self._set_layout_status(t(self.preferences.language, "layouts_no_selection"), "#cc7a00")
+            return
+
+        dialog = Gtk.MessageDialog(
+            transient_for=self,
+            flags=0,
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.OK_CANCEL,
+            text=t(self.preferences.language, "layouts_delete_title"),
+        )
+        dialog.format_secondary_text(t(self.preferences.language, "layouts_delete_message").format(name=record.name))
+        response = dialog.run()
+        dialog.destroy()
+        if response != Gtk.ResponseType.OK:
+            return
+
+        self.layout_store.delete_layout(record.key)
+        if self.preferences.startup_layout_key == record.key:
+            self.preferences.startup_layout_key = None
+            self.autostart.disable()
+            self._save_preferences()
+        self.selected_layout_key = None
+        self.reload_layouts(preserve_selection=False)
+        self._set_layout_status(t(self.preferences.language, "layouts_deleted"), "#1f7a1f")
+
+    def on_open_settings(self, _button: Gtk.Button) -> None:
+        dialog = Gtk.Dialog(
+            title=t(self.preferences.language, "settings_title"),
+            transient_for=self,
+            flags=Gtk.DialogFlags.MODAL,
+        )
+        dialog.add_button(t(self.preferences.language, "password_cancel"), Gtk.ResponseType.CANCEL)
+        dialog.add_button(t(self.preferences.language, "settings_save"), Gtk.ResponseType.OK)
+        dialog.set_default_response(Gtk.ResponseType.OK)
+
+        content = dialog.get_content_area()
+        content.set_spacing(12)
+        content.set_margin_top(14)
+        content.set_margin_bottom(14)
+        content.set_margin_start(14)
+        content.set_margin_end(14)
+
+        subtitle = Gtk.Label(label=t(self.preferences.language, "settings_subtitle"))
+        subtitle.set_xalign(0)
+        subtitle.set_line_wrap(True)
+        content.pack_start(subtitle, False, False, 0)
+
+        form = Gtk.Grid(column_spacing=12, row_spacing=12)
+        content.pack_start(form, False, False, 0)
+
+        language_label = Gtk.Label(label=t(self.preferences.language, "language"))
+        language_label.set_xalign(0)
+        theme_label = Gtk.Label(label=t(self.preferences.language, "theme"))
+        theme_label.set_xalign(0)
+
+        language_combo = Gtk.ComboBoxText()
+        language_combo.append("tr", t(self.preferences.language, "language_tr"))
+        language_combo.append("en", t(self.preferences.language, "language_en"))
+        language_combo.set_active_id(self.preferences.language)
+
+        theme_combo = Gtk.ComboBoxText()
+        theme_combo.append("dark", t(self.preferences.language, "theme_dark"))
+        theme_combo.append("light", t(self.preferences.language, "theme_light"))
+        theme_combo.set_active_id(self.preferences.theme)
+
+        form.attach(language_label, 0, 0, 1, 1)
+        form.attach(language_combo, 1, 0, 1, 1)
+        form.attach(theme_label, 0, 1, 1, 1)
+        form.attach(theme_combo, 1, 1, 1, 1)
+
+        dialog.show_all()
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            language = language_combo.get_active_id() or self.preferences.language
+            theme = theme_combo.get_active_id() or self.preferences.theme
+            self.preferences.language = language
+            self.preferences.theme = theme
+            self._apply_theme()
+            self._save_preferences()
+            self._refresh_texts()
+            self._set_status(t(self.preferences.language, "settings_saved"), "#1f7a1f")
+        dialog.destroy()
 
     def on_delete_event(self, _widget: Gtk.Widget, _event) -> bool:
         if self.preview_source_id is not None:

@@ -8,10 +8,12 @@ def get_theme_css(theme_name: str) -> str:
             "window_bg": "#1f262d",
             "surface": "#26313a",
             "surface_alt": "#2d3944",
+            "surface_soft": "#222c34",
             "text": "#e8f1f7",
             "muted": "#9fb0bc",
             "border": "#364651",
             "accent": "#63b3ed",
+            "success": "#59d38c",
             "accent_text": "#081723",
             "danger": "#ff7f7f",
             "danger_text": "#2f0e0e",
@@ -22,10 +24,12 @@ def get_theme_css(theme_name: str) -> str:
             "window_bg": "#f3f7fb",
             "surface": "#ffffff",
             "surface_alt": "#edf4fa",
+            "surface_soft": "#f7fbff",
             "text": "#173041",
             "muted": "#5f7483",
             "border": "#cfdae4",
             "accent": "#5bb8f0",
+            "success": "#41b86f",
             "accent_text": "#103041",
             "danger": "#ff9d9d",
             "danger_text": "#4b1616",
@@ -36,9 +40,7 @@ def get_theme_css(theme_name: str) -> str:
     colors = palettes.get(theme_name, palettes["dark"])
     return f"""
 window.icon-settings-window,
-window.icon-settings-window box,
 window.icon-settings-window separator,
-window.icon-settings-window menubar,
 window.icon-settings-window menu,
 window.icon-settings-window treeview,
 window.icon-settings-window scrolledwindow {{
@@ -46,13 +48,12 @@ window.icon-settings-window scrolledwindow {{
     color: {colors['text']};
 }}
 
-window.icon-settings-window label {{
+window.icon-settings-window box {{
     color: {colors['text']};
 }}
 
-window.icon-settings-window menubar > menuitem {{
+window.icon-settings-window label {{
     color: {colors['text']};
-    padding: 6px 10px;
 }}
 
 window.icon-settings-window menu menuitem {{
@@ -89,6 +90,24 @@ window.icon-settings-window button.suggested-action:hover {{
 window.icon-settings-window button.destructive-action {{
     background: {colors['danger']};
     color: {colors['danger_text']};
+    border-color: {colors['danger']};
+}}
+
+window.icon-settings-window button.success-action {{
+    background: transparent;
+    color: {colors['success']};
+    border-color: {colors['success']};
+}}
+
+window.icon-settings-window button.outline-accent {{
+    background: transparent;
+    color: {colors['accent']};
+    border-color: {colors['accent']};
+}}
+
+window.icon-settings-window button.outline-danger {{
+    background: transparent;
+    color: {colors['danger']};
     border-color: {colors['danger']};
 }}
 
@@ -141,6 +160,25 @@ window.icon-settings-window treeview.view {{
     border: 1px solid {colors['border']};
 }}
 
+window.icon-settings-window treeview header button,
+window.icon-settings-window treeview header button box,
+window.icon-settings-window treeview header button label,
+window.icon-settings-window treeview header button image {{
+    background: {colors['surface_soft']};
+    color: {colors['text']};
+    box-shadow: none;
+}}
+
+window.icon-settings-window treeview header button {{
+    border-radius: 10px 10px 0 0;
+    border: 1px solid {colors['border']};
+    padding: 8px 12px;
+}}
+
+window.icon-settings-window treeview header button:hover {{
+    background: {colors['surface_alt']};
+}}
+
 window.icon-settings-window treeview.view:selected,
 window.icon-settings-window treeview.view:selected:focus {{
     background: {colors['accent']};
@@ -149,6 +187,54 @@ window.icon-settings-window treeview.view:selected:focus {{
 
 window.icon-settings-window frame {{
     border-color: {colors['border']};
+}}
+
+window.icon-settings-window notebook > header.top {{
+    background: transparent;
+    border: none;
+    padding-bottom: 4px;
+}}
+
+window.icon-settings-window notebook > header.top tabs {{
+    background: transparent;
+    border: none;
+    margin-right: 8px;
+}}
+
+window.icon-settings-window notebook > header.top tab {{
+    background: {colors['surface_alt']};
+    border: 1px solid {colors['border']};
+    border-bottom: none;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 8px 14px;
+    margin-right: 3px;
+    color: {colors['muted']};
+}}
+
+window.icon-settings-window notebook > header.top tab:checked {{
+    background: {colors['surface']};
+    color: {colors['text']};
+}}
+
+window.icon-settings-window notebook > stack {{
+    background: {colors['surface']};
+    border: 1px solid {colors['border']};
+    border-radius: 0 8px 8px 8px;
+    padding: 18px;
+}}
+
+window.icon-settings-window button.header-action {{
+    border-radius: 8px;
+    padding: 6px 14px;
+    min-height: 0;
+    min-width: 0;
+}}
+
+window.icon-settings-window .action-bar {{
+    background: transparent;
+    border-top: 1px solid {colors['border']};
+    padding-top: 12px;
 }}
 
 window.icon-settings-window scale trough {{

@@ -10,10 +10,11 @@ Diller:
 - Türkçe (bu dosya)
 - İngilizce: [README.md](README.md)
 
-Uygulama iki ana bölüm içerir:
+Uygulama üç ana bölüm içerir:
 
 - Simge boyutu ve aralıkları için canlı önizlemeli ayar ekranı
 - Masaüstündeki `.desktop` kısayollarını düzenleme ekranı
+- Masaüstü ikon yerleşimlerini kaydetme ve geri yükleme ekranı
 
 Öne çıkanlar:
 
@@ -23,6 +24,7 @@ Uygulama iki ana bölüm içerir:
 - Türkçe ve İngilizce arayüz
 - Açık ve koyu tema desteği
 - Masaüstündeki `.desktop` dosyalarının ad, dosya adı, simge, komut ve açıklama alanlarını düzenleme
+- Kaydedilmiş düzenleri yeniden adlandırma, geri yükleme ve silme
 
 ## Ekran Görüntüsü
 
@@ -31,7 +33,7 @@ Uygulama iki ana bölüm içerir:
 ## İndir
 
 - Son sürüm: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
-- Doğrudan `.deb` (v1.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v1.0.0/zorin-icon-settings_1.0.0_all.deb
+- Doğrudan `.deb` (v2.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.0/zorin-icon-settings_2.0.0_all.deb
 
 ## Gereksinimler
 
@@ -71,7 +73,7 @@ Başarılı olursa çıktı dosyası `dist/` altında oluşur.
 Kurulum:
 
 ```bash
-sudo dpkg -i dist/zorin-icon-settings_1.0.0_all.deb
+sudo dpkg -i dist/zorin-icon-settings_2.0.0_all.deb
 sudo apt-get install -f
 ```
 
@@ -80,8 +82,8 @@ sudo apt-get install -f
 Etiket (tag) ile otomatik release oluşturma ayarlı:
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v2.0.0
+git push origin v2.0.0
 ```
 
 Bu işlem `.github/workflows/release.yml` workflow’unu tetikler, `.deb` paketini üretir ve GitHub Releases bölümüne yükler.

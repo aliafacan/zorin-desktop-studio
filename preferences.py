@@ -19,6 +19,7 @@ SUPPORTED_THEMES = {"dark", "light"}
 class AppPreferences:
     language: str
     theme: str
+    startup_layout_key: str | None = None
 
 
 class PreferencesStore:
@@ -36,12 +37,13 @@ class PreferencesStore:
 
         language = raw.get("language", defaults.language)
         theme = raw.get("theme", defaults.theme)
+        startup_layout_key = raw.get("startup_layout_key")
         if language not in SUPPORTED_LANGUAGES:
             language = defaults.language
         if theme not in SUPPORTED_THEMES:
             theme = defaults.theme
 
-        return AppPreferences(language=language, theme=theme)
+        return AppPreferences(language=language, theme=theme, startup_layout_key=startup_layout_key)
 
     def save(self, preferences: AppPreferences) -> None:
         os.makedirs(CONFIG_DIR, exist_ok=True)
