@@ -1,2 +1,0 @@
-#!/bin/bash
-exec /usr/bin/python3 /usr/lib/zorin-icon-settings/main.py "$@"
