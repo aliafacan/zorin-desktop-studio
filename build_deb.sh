@@ -3,7 +3,7 @@
 set -e
 
 NAME="zorin-icon-settings"
-VERSION="2.0.0"
+VERSION="2.0.1"
 ARCH="all"
 PKG="${NAME}_${VERSION}_${ARCH}"
 
@@ -43,7 +43,9 @@ install -m 644 "${ROOT_DIR}/backend.py" "${PKGDIR}/usr/lib/${NAME}/backend.py"
 install -m 644 "${ROOT_DIR}/autostart.py" "${PKGDIR}/usr/lib/${NAME}/autostart.py"
 install -m 644 "${ROOT_DIR}/constants.py" "${PKGDIR}/usr/lib/${NAME}/constants.py"
 install -m 644 "${ROOT_DIR}/desktop_entries.py" "${PKGDIR}/usr/lib/${NAME}/desktop_entries.py"
+install -m 644 "${ROOT_DIR}/desktop_layouts.py" "${PKGDIR}/usr/lib/${NAME}/desktop_layouts.py"
 install -m 644 "${ROOT_DIR}/i18n.py" "${PKGDIR}/usr/lib/${NAME}/i18n.py"
+install -m 644 "${ROOT_DIR}/layout_store.py" "${PKGDIR}/usr/lib/${NAME}/layout_store.py"
 install -m 644 "${ROOT_DIR}/main.py" "${PKGDIR}/usr/lib/${NAME}/main.py"
 install -m 644 "${ROOT_DIR}/preferences.py" "${PKGDIR}/usr/lib/${NAME}/preferences.py"
 install -m 644 "${ROOT_DIR}/theme.py" "${PKGDIR}/usr/lib/${NAME}/theme.py"
