@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Zorin Desktop Studio
+Name[tr]=Zorin Masaustu Studyo
+Comment=Adjust desktop icon size, edit launchers, and manage desktop layouts
+Comment[tr]=Masaustu simge boyutlarini ayarla, kisayollari duzenle ve masaustu duzenlerini yonet
+Exec=com.github.aliafacan.ZorinDesktopStudio
+Icon=com.github.aliafacan.ZorinDesktopStudio
+Terminal=false
+Categories=Settings;DesktopSettings;Utility;
+Keywords=zorin;desktop;icons;launcher;layout;gtk;
+StartupNotify=true

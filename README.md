@@ -87,6 +87,21 @@ sudo dpkg -i dist/zorin-icon-settings_2.0.1_all.deb
 sudo apt-get install -f
 ```
 
+## Flatpak / Flathub Preparation
+
+Flathub-ready packaging files are included under [packaging/flatpak](packaging/flatpak):
+
+- [packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.json](packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.json)
+- [packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.desktop](packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.desktop)
+- [packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.metainfo.xml](packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.metainfo.xml)
+
+For local Flatpak build testing:
+
+```bash
+chmod +x packaging/flatpak/build_flatpak_local.sh
+./packaging/flatpak/build_flatpak_local.sh
+```
+
 ## Release Automation
 
 Tag-based GitHub release workflow is configured:

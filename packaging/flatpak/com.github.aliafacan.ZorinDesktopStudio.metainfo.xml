@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.aliafacan.ZorinDesktopStudio</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Zorin Desktop Studio</name>
+  <summary>Desktop icon tuning and launcher/layout manager for Zorin OS</summary>
+
+  <description>
+    <p>
+      Zorin Desktop Studio is a GTK application for managing desktop icon behavior on Zorin OS.
+      It provides live icon size/spacing tuning, desktop launcher editing, and desktop layout save/restore.
+    </p>
+    <ul>
+      <li>Live preview for icon size and spacing</li>
+      <li>Edit existing .desktop launchers from Desktop</li>
+      <li>Save and restore desktop icon layouts</li>
+      <li>Optional auto-load for a selected layout at login</li>
+      <li>Turkish and English UI support</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">com.github.aliafacan.ZorinDesktopStudio.desktop</launchable>
+  <developer id="com.github.aliafacan">
+    <name>Ali Afacan</name>
+  </developer>
+
+  <url type="homepage">https://github.com/aliafacan/zorin-desktop-studio</url>
+  <url type="bugtracker">https://github.com/aliafacan/zorin-desktop-studio/issues</url>
+  <url type="vcs-browser">https://github.com/aliafacan/zorin-desktop-studio</url>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#5BB8F0</color>
+    <color type="primary" scheme_preference="dark">#63B3ED</color>
+  </branding>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Icon Settings</caption>
+      <image>https://raw.githubusercontent.com/aliafacan/zorin-desktop-studio/main/docs/screenshot-icon-settings.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Desktop Launchers</caption>
+      <image>https://raw.githubusercontent.com/aliafacan/zorin-desktop-studio/main/docs/screenshot-desktop-launchers.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Desktop Layouts</caption>
+      <image>https://raw.githubusercontent.com/aliafacan/zorin-desktop-studio/main/docs/screenshot-desktop-layouts.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1"/>
+
+  <releases>
+    <release version="2.0.1" date="2026-04-19"/>
+  </releases>
+</component>

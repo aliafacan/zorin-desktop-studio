@@ -87,6 +87,21 @@ sudo dpkg -i dist/zorin-icon-settings_2.0.1_all.deb
 sudo apt-get install -f
 ```
 
+## Flatpak / Flathub Hazırlığı
+
+Flathub uyumlu paketleme dosyaları [packaging/flatpak](packaging/flatpak) altında yer alır:
+
+- [packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.json](packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.json)
+- [packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.desktop](packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.desktop)
+- [packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.metainfo.xml](packaging/flatpak/com.github.aliafacan.ZorinDesktopStudio.metainfo.xml)
+
+Yerelde Flatpak derleme testi için:
+
+```bash
+chmod +x packaging/flatpak/build_flatpak_local.sh
+./packaging/flatpak/build_flatpak_local.sh
+```
+
 ## Release Otomasyonu
 
 Etiket (tag) ile otomatik release oluşturma ayarlı:
