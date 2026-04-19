@@ -26,14 +26,24 @@ Uygulama üç ana bölüm içerir:
 - Masaüstündeki `.desktop` dosyalarının ad, dosya adı, simge, komut ve açıklama alanlarını düzenleme
 - Kaydedilmiş düzenleri yeniden adlandırma, geri yükleme ve silme
 
-## Ekran Görüntüsü
+## Ekran Görüntüleri
 
-![Zorin Desktop Studio Screenshot](docs/screenshot.png)
+### Simge Ayarları
+
+![Simge Ayarları](docs/screenshot-icon-settings.png)
+
+### Masaüstü Kısayolları
+
+![Masaüstü Kısayolları](docs/screenshot-desktop-launchers.png)
+
+### Masaüstü Düzenleri
+
+![Masaüstü Düzenleri](docs/screenshot-desktop-layouts.png)
 
 ## İndir
 
 - Son sürüm: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
-- Doğrudan `.deb` (v2.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.0/zorin-icon-settings_2.0.0_all.deb
+- Doğrudan `.deb` (v2.0.1): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.1/zorin-icon-settings_2.0.1_all.deb
 
 ## Gereksinimler
 
@@ -73,7 +83,7 @@ Başarılı olursa çıktı dosyası `dist/` altında oluşur.
 Kurulum:
 
 ```bash
-sudo dpkg -i dist/zorin-icon-settings_2.0.0_all.deb
+sudo dpkg -i dist/zorin-icon-settings_2.0.1_all.deb
 sudo apt-get install -f
 ```
 
@@ -82,8 +92,8 @@ sudo apt-get install -f
 Etiket (tag) ile otomatik release oluşturma ayarlı:
 
 ```bash
-git tag v2.0.0
-git push origin v2.0.0
+git tag v2.0.1
+git push origin v2.0.1
 ```
 
 Bu işlem `.github/workflows/release.yml` workflow’unu tetikler, `.deb` paketini üretir ve GitHub Releases bölümüne yükler.

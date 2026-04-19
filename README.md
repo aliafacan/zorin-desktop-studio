@@ -26,14 +26,24 @@ Key features:
 - Edit display name, file name, icon, exec command and comment in `.desktop` launchers
 - Save, restore, rename and delete desktop layout presets
 
-## Screenshot
+## Screenshots
 
-![Zorin Desktop Studio Screenshot](docs/screenshot.png)
+### Icon Settings
+
+![Icon Settings](docs/screenshot-icon-settings.png)
+
+### Desktop Launchers
+
+![Desktop Launchers](docs/screenshot-desktop-launchers.png)
+
+### Desktop Layouts
+
+![Desktop Layouts](docs/screenshot-desktop-layouts.png)
 
 ## Download
 
 - Latest release: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
-- Direct `.deb` (v2.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.0/zorin-icon-settings_2.0.0_all.deb
+- Direct `.deb` (v2.0.1): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.1/zorin-icon-settings_2.0.1_all.deb
 
 ## Requirements
 
@@ -73,7 +83,7 @@ The output package is generated in `dist/`.
 Install:
 
 ```bash
-sudo dpkg -i dist/zorin-icon-settings_2.0.0_all.deb
+sudo dpkg -i dist/zorin-icon-settings_2.0.1_all.deb
 sudo apt-get install -f
 ```
 
@@ -82,8 +92,8 @@ sudo apt-get install -f
 Tag-based GitHub release workflow is configured:
 
 ```bash
-git tag v2.0.0
-git push origin v2.0.0
+git tag v2.0.1
+git push origin v2.0.1
 ```
 
 This triggers `.github/workflows/release.yml`, builds `.deb`, and uploads it to GitHub Releases.
