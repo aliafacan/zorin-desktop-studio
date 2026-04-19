@@ -1,0 +1,10 @@
+Package: zorin-icon-settings
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: python3 (>= 3.10), python3-gi, gir1.2-gtk-3.0
+Maintainer: Ali <ali@example.com>
+Description: Desktop icon settings and launcher editor for Zorin OS
+ GTK-based utility for live desktop icon tuning and .desktop launcher editing.
+ Includes Turkish/English UI and light/dark theme support.
