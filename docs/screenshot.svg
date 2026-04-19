@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="720" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Zorin Desktop Studio screenshot preview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f1a24"/>
+      <stop offset="100%" stop-color="#1f3242"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1f2c39"/>
+      <stop offset="100%" stop-color="#182430"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect x="120" y="70" width="960" height="580" rx="22" fill="url(#panel)" stroke="#37506a"/>
+  <rect x="120" y="70" width="960" height="44" rx="22" fill="#223647"/>
+  <text x="600" y="98" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="30" fill="#d5ecff" font-weight="700">Zorin Desktop Studio</text>
+
+  <rect x="160" y="150" width="880" height="60" rx="12" fill="#1d313f" stroke="#3a566d"/>
+  <text x="210" y="188" font-family="DejaVu Sans, sans-serif" font-size="24" fill="#9fc2dc">Sections</text>
+  <text x="410" y="188" font-family="DejaVu Sans, sans-serif" font-size="24" fill="#9fc2dc">Actions</text>
+
+  <text x="170" y="260" font-family="DejaVu Sans, sans-serif" font-size="36" fill="#ecf6ff" font-weight="700">Icon Settings</text>
+  <rect x="170" y="280" width="840" height="2" fill="#355069"/>
+
+  <text x="170" y="338" font-family="DejaVu Sans, sans-serif" font-size="28" fill="#d5ebff" font-weight="700">Icon Size</text>
+  <rect x="170" y="362" width="840" height="10" rx="5" fill="#2a4053"/>
+  <rect x="170" y="362" width="420" height="10" rx="5" fill="#8ed4ff"/>
+  <circle cx="590" cy="367" r="16" fill="#8ed4ff" stroke="#153043" stroke-width="4"/>
+
+  <text x="170" y="438" font-family="DejaVu Sans, sans-serif" font-size="28" fill="#d5ebff" font-weight="700">Horizontal Spacing</text>
+  <rect x="170" y="462" width="840" height="10" rx="5" fill="#2a4053"/>
+  <rect x="170" y="462" width="300" height="10" rx="5" fill="#8ed4ff"/>
+  <circle cx="470" cy="467" r="16" fill="#8ed4ff" stroke="#153043" stroke-width="4"/>
+
+  <rect x="420" y="540" width="150" height="56" rx="14" fill="#ff8f8f"/>
+  <text x="495" y="576" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="28" fill="#3a1717" font-weight="700">Reset</text>
+
+  <rect x="600" y="540" width="170" height="56" rx="14" fill="#63b3ed"/>
+  <text x="685" y="576" text-anchor="middle" font-family="DejaVu Sans, sans-serif" font-size="28" fill="#0c1f2f" font-weight="700">Apply</text>
+</svg>

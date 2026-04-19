@@ -1,5 +1,8 @@
 # Zorin Desktop Studio
 
+[![Release](https://img.shields.io/github/v/release/aliafacan/zorin-desktop-studio?label=release)](https://github.com/aliafacan/zorin-desktop-studio/releases)
+[![Build and Release](https://img.shields.io/github/actions/workflow/status/aliafacan/zorin-desktop-studio/release.yml?label=release%20workflow)](https://github.com/aliafacan/zorin-desktop-studio/actions/workflows/release.yml)
+
 Zorin OS masaüstü ikonları için GTK tabanlı ayar ve düzenleme aracı.
 
 Uygulama iki ana bölüm içerir:
@@ -15,6 +18,15 @@ Uygulama iki ana bölüm içerir:
 - Türkçe ve İngilizce arayüz
 - Açık ve koyu tema desteği
 - Masaüstündeki `.desktop` dosyalarının ad, dosya adı, simge, komut ve açıklama alanlarını düzenleme
+
+## Ekran Görüntüsü
+
+![Zorin Desktop Studio Screenshot](docs/screenshot.svg)
+
+## İndir
+
+- Son sürüm: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
+- Doğrudan `.deb` (v1.0.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v1.0.0/zorin-icon-settings_1.0.0_all.deb
 
 ## Gereksinimler
 
@@ -75,6 +87,13 @@ Sonra GitHub üzerinde public bir repo açıp uzak depo ekleyebilirsin:
 git remote add origin <REPO_URL>
 git branch -M main
 git push -u origin main
+```
+
+Sürüm etiketi ile otomatik release çıkarmak için:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ## Gizlilik Notu
