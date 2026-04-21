@@ -13,7 +13,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, GLib, Gtk  # pyright: ignore[reportMissingModuleSource]
 
 from backend import AuthRequiredError, BackendError, IconSettingsBackend, SessionState
-from autostart import AutostartManager
+from autostart import AutostartManager, WatcherAutostartManager
+from desktop_watcher import DesktopWatcher
 from constants import APP_ICON_NAME, CUSTOM_SETTING, PREVIEW_DEBOUNCE_MS, IconValues
 from desktop_layouts import DesktopLayoutService, LayoutError
 from desktop_entries import DesktopEntryInfo, DesktopEntryStore
@@ -33,6 +34,9 @@ class IconSettingsWindow(Gtk.Window):
         self.layout_service = DesktopLayoutService()
         self.layout_store = LayoutStore()
         self.autostart = AutostartManager()
+        self.watcher_autostart = WatcherAutostartManager()
+        self.desktop_watcher = DesktopWatcher(preferences_store)
+        self.desktop_watcher.start()
         self.revert_state = self.backend.load_state()
         self.last_preview_state = self.revert_state
         self.preview_source_id = None
@@ -980,6 +984,7 @@ class IconSettingsWindow(Gtk.Window):
         if self.preferences.startup_layout_key == record.key:
             self.preferences.startup_layout_key = None
             self.autostart.disable()
+            self.watcher_autostart.disable()
             self._save_preferences()
             self.layouts_autoload_btn.set_label(self._autoload_button_label())
             self.layouts_startup_label.set_text(self._startup_summary_text())
@@ -988,6 +993,7 @@ class IconSettingsWindow(Gtk.Window):
 
         self.preferences.startup_layout_key = record.key
         self.autostart.enable()
+        self.watcher_autostart.enable()
         self._save_preferences()
         self.layouts_autoload_btn.set_label(self._autoload_button_label())
         self.layouts_startup_label.set_text(self._startup_summary_text())
@@ -1146,6 +1152,7 @@ class IconSettingsWindow(Gtk.Window):
         dialog.destroy()
 
     def on_delete_event(self, _widget: Gtk.Widget, _event) -> bool:
+        self.desktop_watcher.stop()
         if self.preview_source_id is not None:
             GLib.source_remove(self.preview_source_id)
             self.preview_source_id = None

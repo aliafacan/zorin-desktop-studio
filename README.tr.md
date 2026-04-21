@@ -25,6 +25,7 @@ Uygulama üç ana bölüm içerir:
 - Açık ve koyu tema desteği
 - Masaüstündeki `.desktop` dosyalarının ad, dosya adı, simge, komut ve açıklama alanlarını düzenleme
 - Kaydedilmiş düzenleri yeniden adlandırma, geri yükleme ve silme
+- **Masaüstü İzleyici**: masaüstü dizinini arka planda izler; dosya eklendiğinde, silindiğinde veya yeniden adlandırıldığında seçili düzeni otomatik olarak yeniden uygular — sistem olaylarından sonra simge konumlarının kaybolmasını engeller
 
 ## Ekran Görüntüleri
 
@@ -43,7 +44,7 @@ Uygulama üç ana bölüm içerir:
 ## İndir
 
 - Son sürüm: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
-- Doğrudan `.deb` (v2.0.1): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.1/zorin-icon-settings_2.0.1_all.deb
+- Doğrudan `.deb` (v2.1.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.1.0/zorin-icon-settings_2.1.0_all.deb
 
 ## Gereksinimler
 
@@ -83,7 +84,7 @@ Başarılı olursa çıktı dosyası `dist/` altında oluşur.
 Kurulum:
 
 ```bash
-sudo dpkg -i dist/zorin-icon-settings_2.0.1_all.deb
+sudo dpkg -i dist/zorin-icon-settings_2.1.0_all.deb
 sudo apt-get install -f
 ```
 
@@ -107,8 +108,8 @@ chmod +x packaging/flatpak/build_flatpak_local.sh
 Etiket (tag) ile otomatik release oluşturma ayarlı:
 
 ```bash
-git tag v2.0.1
-git push origin v2.0.1
+git tag v2.1.0
+git push origin v2.1.0
 ```
 
 Bu işlem `.github/workflows/release.yml` workflow’unu tetikler, `.deb` paketini üretir ve GitHub Releases bölümüne yükler.

@@ -25,6 +25,7 @@ Key features:
 - Light and dark theme support
 - Edit display name, file name, icon, exec command and comment in `.desktop` launchers
 - Save, restore, rename and delete desktop layout presets
+- **Desktop Watcher**: monitors the desktop directory in the background and automatically re-applies the selected layout whenever files are added, removed or renamed — prevents icon positions from getting lost after system events
 
 ## Screenshots
 
@@ -43,7 +44,7 @@ Key features:
 ## Download
 
 - Latest release: https://github.com/aliafacan/zorin-desktop-studio/releases/latest
-- Direct `.deb` (v2.0.1): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.0.1/zorin-icon-settings_2.0.1_all.deb
+- Direct `.deb` (v2.1.0): https://github.com/aliafacan/zorin-desktop-studio/releases/download/v2.1.0/zorin-icon-settings_2.1.0_all.deb
 
 ## Requirements
 
@@ -83,7 +84,7 @@ The output package is generated in `dist/`.
 Install:
 
 ```bash
-sudo dpkg -i dist/zorin-icon-settings_2.0.1_all.deb
+sudo dpkg -i dist/zorin-icon-settings_2.1.0_all.deb
 sudo apt-get install -f
 ```
 
@@ -107,8 +108,8 @@ chmod +x packaging/flatpak/build_flatpak_local.sh
 Tag-based GitHub release workflow is configured:
 
 ```bash
-git tag v2.0.1
-git push origin v2.0.1
+git tag v2.1.0
+git push origin v2.1.0
 ```
 
 This triggers `.github/workflows/release.yml`, builds `.deb`, and uploads it to GitHub Releases.

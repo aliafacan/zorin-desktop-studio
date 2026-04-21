@@ -8,6 +8,7 @@ import argparse
 from backend import BackendError, IconSettingsBackend
 from constants import APP_ICON_NAME
 from desktop_layouts import DesktopLayoutService, LayoutError
+from desktop_watcher import DesktopWatcher
 from i18n import t, translate_backend_message
 from layout_store import LayoutStore
 from preferences import PreferencesStore
@@ -47,15 +48,38 @@ def restore_startup_layout(preferences_store: PreferencesStore) -> int:
     return 0
 
 
-def main() -> int:
+def watch_desktop(preferences_store: PreferencesStore) -> int:
+    """Arka planda masaüstünü izler; startup_layout_key varsa değişikliklerde uygular."""
+    import gi
+
+    gi.require_version("GLib", "2.0")
+    from gi.repository import GLib  # pyright: ignore[reportMissingModuleSource]
+
+    watcher = DesktopWatcher(preferences_store)
+    watcher.start()
+
+    loop = GLib.MainLoop()
+    try:
+        loop.run()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        watcher.stop()
+    return 0
+
+
+
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--restore-startup-layout", action="store_true")
+    parser.add_argument("--watch-desktop", action="store_true")
     args, _unknown = parser.parse_known_args()
 
     preferences_store = PreferencesStore()
     preferences = preferences_store.load()
     if args.restore_startup_layout:
         return restore_startup_layout(preferences_store)
+    if args.watch_desktop:
+        return watch_desktop(preferences_store)
 
     import gi
 

@@ -3,13 +3,13 @@
 set -e
 
 NAME="zorin-icon-settings"
-VERSION="2.0.1"
+VERSION="2.1.0"
 ARCH="all"
 PKG="${NAME}_${VERSION}_${ARCH}"
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 OUTDIR="${ROOT_DIR}/dist"
-TMPBUILD="$(mktemp -d /tmp/${NAME}.XXXXXX)"
+TMPBUILD="$(mktemp -d "${HOME}/.cache/${NAME}.XXXXXX")"
 PKGDIR="${TMPBUILD}/${PKG}"
 
 run_dpkg_deb() {
@@ -44,6 +44,7 @@ install -m 644 "${ROOT_DIR}/autostart.py" "${PKGDIR}/usr/lib/${NAME}/autostart.p
 install -m 644 "${ROOT_DIR}/constants.py" "${PKGDIR}/usr/lib/${NAME}/constants.py"
 install -m 644 "${ROOT_DIR}/desktop_entries.py" "${PKGDIR}/usr/lib/${NAME}/desktop_entries.py"
 install -m 644 "${ROOT_DIR}/desktop_layouts.py" "${PKGDIR}/usr/lib/${NAME}/desktop_layouts.py"
+install -m 644 "${ROOT_DIR}/desktop_watcher.py" "${PKGDIR}/usr/lib/${NAME}/desktop_watcher.py"
 install -m 644 "${ROOT_DIR}/i18n.py" "${PKGDIR}/usr/lib/${NAME}/i18n.py"
 install -m 644 "${ROOT_DIR}/layout_store.py" "${PKGDIR}/usr/lib/${NAME}/layout_store.py"
 install -m 644 "${ROOT_DIR}/main.py" "${PKGDIR}/usr/lib/${NAME}/main.py"
@@ -87,7 +88,7 @@ Version: ${VERSION}
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Depends: python3 (>= 3.10), python3-gi, gir1.2-gtk-3.0
+Depends: python3 (>= 3.10), python3-gi, gir1.2-gtk-3.0, gir1.2-gio-2.0
 Maintainer: Ali <ali@example.com>
 Description: Desktop tools suite for Zorin OS
  GTK-based utility for icon tuning, desktop launcher editing, and
