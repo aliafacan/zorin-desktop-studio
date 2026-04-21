@@ -9,7 +9,7 @@ PKG="${NAME}_${VERSION}_${ARCH}"
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 OUTDIR="${ROOT_DIR}/dist"
-TMPBUILD="$(mktemp -d "${HOME}/.cache/${NAME}.XXXXXX")"
+TMPBUILD="$(mkdir -p "${HOME}/.cache" && mktemp -d "${HOME}/.cache/${NAME}.XXXXXX")"
 PKGDIR="${TMPBUILD}/${PKG}"
 
 run_dpkg_deb() {
@@ -88,7 +88,7 @@ Version: ${VERSION}
 Section: utils
 Priority: optional
 Architecture: ${ARCH}
-Depends: python3 (>= 3.10), python3-gi, gir1.2-gtk-3.0, gir1.2-gio-2.0
+Depends: python3 (>= 3.10), python3-gi, gir1.2-gtk-3.0, gir1.2-glib-2.0
 Maintainer: Ali <ali@example.com>
 Description: Desktop tools suite for Zorin OS
  GTK-based utility for icon tuning, desktop launcher editing, and
