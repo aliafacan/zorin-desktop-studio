@@ -68,7 +68,7 @@ def watch_desktop(preferences_store: PreferencesStore) -> int:
     return 0
 
 
-
+def main() -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--restore-startup-layout", action="store_true")
     parser.add_argument("--watch-desktop", action="store_true")
